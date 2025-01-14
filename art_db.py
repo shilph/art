@@ -112,6 +112,7 @@ class ARTDatabase(object):
         """Add ART database and tables.
 
         ART tables
+            * Configs: Application configuration/setting
             * Categories: Reward program categories
             * Awards: Reward types and information
             * Accounts: Individual user account per reward program
@@ -119,6 +120,13 @@ class ARTDatabase(object):
         """
         self.cursor.execute(f"CREATE DATABASE {self.DEFAULT_DATABASE}")
         self.cursor.execute(f"USE {self.DEFAULT_DATABASE}")
+        # Configuration
+        self.cursor.execute(
+            "CREATE TABLE Configs ("
+            "   conf_key VARCHAR(50) NOT NULL UNIQUE"
+            "   conf_value VARCHAR(300)"
+            ")"
+        )
         # Award program category: index, category type (credit cards, airlines, hotels..)
         self.cursor.execute(
             "CREATE TABLE Categories ("
@@ -300,8 +308,7 @@ class ARTDatabase(object):
         )
         result = self.cursor.fetchone()
         if result is None:
-            raise RuntimeError(
-                f"Could not find an account for {user} ({award})")
+            raise RuntimeError(f"Could not find an account for {user} ({award})")
         return result[0]
 
     def add_account(self, user: str, award: str, username: str,
@@ -327,7 +334,8 @@ class ARTDatabase(object):
             return False
         self.cursor.execute(
             f"INSERT INTO Accounts (award_id, user, required_values) "
-            f"VALUES ({award_id}, '{user}', '{required_values}')")
+            f"VALUES ({award_id}, '{user}', '{required_values}')"
+        )
         self.connection.commit()
         return True
 
@@ -340,7 +348,7 @@ class ARTDatabase(object):
         balances = {}
         self.cursor.execute(
             f"SELECT C.category, A.award, ACC.required_values, H.balance, ACC.expected_expire, H.updated "
-            f"FROM Accounts ACC " 
+            f"FROM Accounts ACC "
             f"JOIN Awards A ON ACC.award_id = A.id "
             f"JOIN Histories H ON ACC.id = H.account_id "
             f"JOIN Categories C ON A.category_id = C.id "
