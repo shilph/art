@@ -67,6 +67,11 @@ class ARTDatabase(object):
             AWARD_REQUIRED_FILED_SPLITER.join(["Username", "Password"])
         ],
         [
+            "Airlines", "Alaska Airlines Mileage Plan", 0, "", "alaska",
+            AWARD_REQUIRED_FILED_SPLITER.join(["username", "password"]),
+            AWARD_REQUIRED_FILED_SPLITER.join(["Username", "Password"])
+        ],
+        [
             "Airlines", "Virgin Atlantic Flying Club", 0, "", "virgin_atlantic",
             AWARD_REQUIRED_FILED_SPLITER.join(["username", "password"]),
             AWARD_REQUIRED_FILED_SPLITER.join(["Username", "Password"])
@@ -83,6 +88,13 @@ class ARTDatabase(object):
             AWARD_REQUIRED_FILED_SPLITER.join(["username", "password"]),
             AWARD_REQUIRED_FILED_SPLITER.join(["Username", "Password"])
         ],
+    ]
+
+    # configurations/settings
+    CONFIGS = [
+        ["chrome_executable", "Chrome Executable Link", r"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"],
+        ["art_blog_link", "", "https://automatedrewardstracker.blogspot.com/"],
+        ["last_day_note_opened", "", date.today()]
     ]
 
     def __init__(self, password: str):
@@ -123,7 +135,8 @@ class ARTDatabase(object):
         # Configuration
         self.cursor.execute(
             "CREATE TABLE Configs ("
-            "   conf_key VARCHAR(50) NOT NULL UNIQUE"
+            "   conf_key VARCHAR(50) NOT NULL UNIQUE,"
+            "   conf_label VARCHAR(100),"
             "   conf_value VARCHAR(300)"
             ")"
         )
@@ -170,6 +183,13 @@ class ARTDatabase(object):
             "   FOREIGN KEY (account_id) REFERENCES Accounts(id)"
             ")"
         )
+        # add configs
+        for conf_key, conf_label, conf_value in self.CONFIGS:
+            self.cursor.execute(
+                f"INSERT INTO Configs (conf_key, conf_label, conf_value) "
+                f"VALUES ('{conf_key}', '{conf_label}', '{conf_value}')"
+            )
+            self.connection.commit()
         # add award categories
         for category in self.AWARD_CATEGORIES:
             self.cursor.execute(
@@ -186,6 +206,30 @@ class ARTDatabase(object):
                 f")"
             )
             self.connection.commit()
+
+    def get_configs(self, conf_key: str = None) -> dict:
+        """Get data from Configs table.
+
+        :param conf_key: Configs.conf_key to find. If conf_key is null, return all data in Configs
+        :return: {conf_key: {conf_label, conf_value} ...}
+        """
+        self.cursor.execute(
+            "SELECT conf_key, conf_label, conf_value FROM Configs" +
+            ("" if conf_key is None else f" WHERE conf_key='{conf_key}'")
+        )
+        configs = {}
+        for conf_key, conf_label, conf_value in self.cursor.fetchall():
+            configs[conf_key] = {"conf_label": conf_label, "conf_value": conf_value}
+        return configs
+
+    def set_config(self, conf_key: str = None, conf_value: str = None) -> None:
+        """Set a configuration in Configs.
+
+        :param conf_key: Configs.conf_key to update
+        :param conf_value: Configs.conf_key to be updated
+        """
+        self.cursor.execute(f"UPDATE Configs SET conf_value = '{conf_value}' WHERE conf_key = '{conf_key}'")
+        self.connection.commit()
 
     def get_users(self) -> [str]:
         """Get name of all users.

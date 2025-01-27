@@ -42,7 +42,8 @@ class AddAward(tk.Toplevel):
         combo_award = ttk.Combobox(self.main_frame,
                                    values=award_names,
                                    width=30,
-                                   textvariable=self.award)
+                                   textvariable=self.award,
+                                   state='readonly')
         combo_award.grid(row=1, column=1, padx=3, pady=2, sticky='e')
         combo_award.bind("<<ComboboxSelected>>", self.on_award_selected)
 

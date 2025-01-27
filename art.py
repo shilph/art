@@ -4,15 +4,15 @@ import tkinter.ttk as ttk
 from importlib import import_module
 from random import randint
 from subprocess import Popen
-
-from click import prompt
 from playwright.sync_api import sync_playwright
+import webbrowser
+import platform
+from datetime import date
 
 from art_db import ARTDatabase
-
-# popups
-from art_add_award_popup import AddAward
-
+from popups.add_award import AddAward
+from popups.note_of_day import NoteOfDay
+from popups.settings import Settings
 
 class ART(object):
     """Main class for ART, Automated Rewards Tracker"""
@@ -27,16 +27,35 @@ class ART(object):
                 self.art_db = ARTDatabase(password=password)
                 self.chrome_debug_port = randint(10000, 30000)
                 # set size of Chrome to a limited/fixed size
-                Popen([
-                    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-                    f"--remote-debugging-port={self.chrome_debug_port}",
-                    "--window-size=1240,800"
-                ])
+                if platform.system() == "Windows":
+                    chrome_path = self.art_db.get_configs("chrome_executable")["chrome_executable"]["conf_value"]
+                    self.chrome_process = Popen([
+                        chrome_path,
+                        f"--remote-debugging-port={self.chrome_debug_port}",
+                        "--window-size=1240,800"
+                    ])
+                elif platform.system() == "Linux":
+                    # I did not test for Linux yet.
+                    self.chrome_process = Popen([
+                        "google-chrome",
+                        f"--remote-debugging-port={self.chrome_debug_port}",
+                        "--window-size=1240,800"
+                    ])
+                elif platform.system() == "Darwin":
+                    # Since I do not have a MAC system, I did not test this line.
+                    self.chrome_process = Popen([
+                        "open",
+                        "-a",
+                        "Google Chrome.app",
+                        "--args",
+                        f"--remote-debugging-port={self.chrome_debug_port}",
+                        "--window-size=1240,800"
+                    ])
                 self.playwright = sync_playwright().start()
                 self.chrome_debug_browser = self.playwright.chromium.connect_over_cdp(
                     f"http://localhost:{self.chrome_debug_port}"
                 )
-                print(f"DEBUG MODE >> Chrome Port #{self.chrome_debug_port}")
+                print(f"DEBUG MODE >> Chrome Debug Port #{self.chrome_debug_port}")
                 self.show_main_app()
                 break
             except RuntimeError:
@@ -59,7 +78,7 @@ class ART(object):
             label = "Please enter MySQL Database Password:"
         else:
             label = f"Please enter MySQL Database Password (Retry {retry}):"
-        return simpledialog.askstring(title=title, prompt=label)
+        return simpledialog.askstring(title=title, prompt=label, show="*")
 
     def show_main_app(self) -> None:
         """Creating GUI: main window."""
@@ -73,7 +92,12 @@ class ART(object):
 
         self.init_data()
 
-        self.win.protocol("WM_DELETE_WINDOWS", self.on_closing)
+        self.win.protocol("WM_DELETE_WINDOW", self.on_closing)
+        # show note of the day but only once a day
+        today = date.today().strftime("%Y-%m-%d")
+        if self.art_db.get_configs("last_day_note_opened")["last_day_note_opened"]["conf_value"] != today:
+            self.win.after(1000, self.show_note_of_day)
+
         self.win.mainloop()
 
     def gui_add_menu(self) -> None:
@@ -86,8 +110,8 @@ class ART(object):
         menu_file.add_command(label="Export to Excel (NYI)",
                               command=self.on_export_to_excel)
         menu_file.add_separator()
-        menu_file.add_command(label="Settings (NYI)",
-                              command=self.on_open_setting_window)
+        menu_file.add_command(label="Settings",
+                              command=self.on_open_settings_window)
         menubar.add_cascade(label="File", menu=menu_file)
 
         # menu: Account
@@ -108,9 +132,9 @@ class ART(object):
 
         # menu: Help
         menu_help = tk.Menu(menubar, tearoff=False)
-        menu_help.add_command(label="How to Use (NYI)", command=self.on_show_howto_guide)
+        menu_help.add_command(label="Note of the Day", command=self.on_show_note_of_day)
         menu_help.add_separator()
-        menu_help.add_command(label="About ART (NYI)", command=self.on_show_about)
+        menu_help.add_command(label="About ART", command=self.on_show_about)
         menubar.add_cascade(label="Help", menu=menu_help)
 
     def gui_add_main(self) -> None:
@@ -122,7 +146,7 @@ class ART(object):
         label_owner = ttk.Label(frame_owner, text="Owner:", width=10)
         label_owner.grid(column=0, row=0, padx=10, pady=2)
         current_owner = tk.StringVar()
-        self.combo_owner = ttk.Combobox(frame_owner, textvariable=current_owner, width=30)
+        self.combo_owner = ttk.Combobox(frame_owner, textvariable=current_owner, width=30, state='readonly')
         self.combo_owner.bind('<<ComboboxSelected>>', self.on_owner_changed)
         self.combo_owner.grid(column=1, row=0, padx=0, pady=2)
 
@@ -266,6 +290,10 @@ class ART(object):
         """Event: close ART application."""
         self.art_db.close()
         self.playwright.stop()
+        # close Chrome browser
+        self.chrome_process.terminate()
+        self.chrome_process.wait()
+        self.win.destroy()
 
     def on_export_to_excel(self) -> None:
         """Event: export data to Excel"""
@@ -320,17 +348,23 @@ class ART(object):
         """Event: remove an award from a user."""
         pass
 
-    def on_open_setting_window(self) -> None:
+    def on_open_settings_window(self) -> None:
         """Event: open setting window."""
-        pass
+        Settings(parent=self.win, art_db=self.art_db)
 
-    def on_show_howto_guide(self) -> None:
+    def show_note_of_day(self) -> None:
+        """Show note of the day popup"""
+        NoteOfDay(parent=self.win, art_db=self.art_db)
+        self.art_db.set_config("last_day_note_opened", date.today().strftime("%Y-%m-%d"))
+
+    def on_show_note_of_day(self) -> None:
         """Event: open howto guide."""
-        pass
+        self.show_note_of_day()
+        # record today's date
 
     def on_show_about(self) -> None:
         """Event: open about window."""
-        pass
+        webbrowser.open("https://github.com/shilph/art")
 
     def on_owner_changed(self, event) -> None:
         """Event: selected owner is changed."""
@@ -383,6 +417,9 @@ class ART(object):
         selected_award = next(
             (self.treeview_award_list.item(item)['values'] for item in self.treeview_award_list.selection()), None
         )
+        if selected_award is None:
+            return
+
         award = selected_award[0]
         self.selected_award_details = None
 
