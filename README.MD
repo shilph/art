@@ -45,7 +45,7 @@ Unfortunately, AwardWallet decided not to honor the grandfathered service since 
   * ART uses Chrome DevTools Protocol to control the Chrome browser to track rewards programs automatically.
 
 ### Installation
-1. Install all dependencies
+1. Install all Prerequisites 
    1. [How to install Python 3 on YouTube]((https://www.youtube.com/results?search_query=how+to+install+python+3))
    2. [How to install MySQL](https://www.youtube.com/results?search_query=how+to+install+mysql+community+server)
       1. Please use a strong password while installing MySQL. All your usernames and passwords will be installed on MySQL database.
@@ -54,6 +54,11 @@ Unfortunately, AwardWallet decided not to honor the grandfathered service since 
       2. **MySQL Connector:** _pip install mysql-connector-python_
       3. **beautifulsoup:** _pip install beautifulsoup4_
       4. **requests:** _pip install requests_
+      
+[<img src="how_to_install_prerequisites.png" width="80%">](https://www.youtube.com/watch?v=3Rd9kUrtLkY)
+> [!NOTE]
+> Please follow the video to install prerequisites.
+
 2. Download entire ART package or clone it.
    1. ![Download from GitHub](download_from_github.png)
 
