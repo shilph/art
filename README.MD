@@ -39,6 +39,7 @@ Unfortunately, AwardWallet decided not to honor the grandfathered service since 
     * [MySQL Connector for Python](https://pypi.org/project/mysql-connector-python/)
     * [beautifulsoup](https://pypi.org/project/beautifulsoup4/)
     * [requests](https://pypi.org/project/requests/)
+    * [dateutil](https://pypi.org/project/python-dateutil/)
 * [MySQL (Community version)](https://dev.mysql.com/downloads/)
   * For Windows user, please use [MySQL Installer for Windows](https://dev.mysql.com/downloads/windows/)
 * [Google Chrome](https://www.google.com/chrome/bsem/download/en_us)
@@ -54,6 +55,7 @@ Unfortunately, AwardWallet decided not to honor the grandfathered service since 
       2. **MySQL Connector:** _pip install mysql-connector-python_
       3. **beautifulsoup:** _pip install beautifulsoup4_
       4. **requests:** _pip install requests_
+      5. **dateutil:** _pip install python-dateutil_
       
 [<img src="how_to_install_prerequisites.png" width="80%">](https://www.youtube.com/watch?v=3Rd9kUrtLkY)
 > [!NOTE]
