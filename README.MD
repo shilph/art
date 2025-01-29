@@ -46,6 +46,13 @@ Unfortunately, AwardWallet decided not to honor the grandfathered service since 
   * ART uses Chrome DevTools Protocol to control the Chrome browser to track rewards programs automatically.
 
 ### Installation
+
+> [!NOTE]
+> If you are a Windows user, please install MySQL and Chrome then download compiled executable file. 
+> This executable file contains Python 3 with libraries and ART codes for your convenience.
+> 
+> [ART Executable File for Windows](https://github.com/shilph/art/blob/main/dist/art.exe)
+
 1. Install all Prerequisites 
    1. [How to install Python 3 on YouTube]((https://www.youtube.com/results?search_query=how+to+install+python+3))
    2. [How to install MySQL](https://www.youtube.com/results?search_query=how+to+install+mysql+community+server)
