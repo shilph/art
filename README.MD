@@ -51,7 +51,7 @@ Unfortunately, AwardWallet decided not to honor the grandfathered service since 
 > If you are a Windows user, please install MySQL and Chrome then download compiled executable file. 
 > This executable file contains Python 3 with libraries and ART codes for your convenience.
 > 
-> [ART Executable File for Windows](https://github.com/shilph/art/blob/main/dist/art.exe)
+> [ART Executable File for Windows (art.exe)](https://github.com/shilph/art/blob/main/dist/)
 
 1. Install all Prerequisites 
    1. [How to install Python 3 on YouTube]((https://www.youtube.com/results?search_query=how+to+install+python+3))
