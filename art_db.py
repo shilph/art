@@ -355,8 +355,7 @@ class ARTDatabase(object):
             raise RuntimeError(f"Could not find an account for {user} ({award})")
         return result[0]
 
-    def add_account(self, user: str, award: str, username: str,
-                    account_info: dict) -> bool:
+    def add_account(self, user: str, award: str, username: str, account_info: dict) -> bool:
         """Add an account.
 
         :param user: name of user
@@ -371,11 +370,10 @@ class ARTDatabase(object):
             for info in account_info
             if info != "award" and info != "first_field"
         ]
-        required_values = self.AWARD_REQUIRED_FILED_SPLITER.join(
-            account_info_dict)
-        if self.get_account_info(
-                award=award, user=user, username=username) is not None:
-            return False
+        required_values = self.AWARD_REQUIRED_FILED_SPLITER.join(account_info_dict)
+        if self.get_account_info(award=award, user=user, username=username) is not None:
+            # if there is no account balance, return True (as account added)
+            return len(self.get_balance_history(user=user, award=award, username=username)) == 0
         self.cursor.execute(
             f"INSERT INTO Accounts (award_id, user, required_values) "
             f"VALUES ({award_id}, '{user}', '{required_values}')"

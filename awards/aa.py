@@ -18,12 +18,34 @@ def get_balance(browser, account_info: dict, **kwargs) -> dict:
     page.wait_for_timeout(3000)
 
     # log in
-    next(
-        (button for button in page.query_selector_all("hp-header-button")
-            if button.inner_text() == "Log in" and button.is_visible()),
-        None
-    ).click()
-    page.wait_for_timeout(3000)
+    try:
+        next(
+            (button for button in page.query_selector_all("hp-header-button")
+                if button.inner_text() == "Log in" and button.is_visible()),
+            None
+        ).click()
+        page.wait_for_timeout(3000)
+    except AttributeError:
+        # log out if previously logged in
+        dropdown = next(
+            (dropdown for dropdown in page.query_selector_all("adc-account-dropdown") if dropdown.is_visible()),
+            None
+        )
+        dropdown.click()
+        page.wait_for_timeout(1000)
+        next(
+            (button for button in dropdown.query_selector_all("hp-account-dropdown-button")
+                if button.is_visible() and button.inner_text() == "Log out"),
+            None
+        ).click()
+        page.wait_for_timeout(3000)
+        # log in again
+        next(
+            (button for button in page.query_selector_all("hp-header-button")
+             if button.inner_text() == "Log in" and button.is_visible()),
+            None
+        ).click()
+        page.wait_for_timeout(3000)
 
     input_username = page.query_selector("ail-input#username")
     input_username.click()

@@ -267,9 +267,13 @@ class ART(object):
                                                     user=user,
                                                     username=username)
         script = import_module(f"awards.{award_info['script']}")
-        return script.get_balance(browser=self.chrome_debug_browser,
-                                  account_info=account_info,
-                                  award_info=award_info)
+        try:
+            return script.get_balance(browser=self.chrome_debug_browser,
+                                      account_info=account_info,
+                                      award_info=award_info)
+        except:
+            # if there is any error, return dummy output
+            return {"balance": 0, "expire_date": None}
 
     def refresh_award_list(self) -> None:
         """Refresh award overview"""
