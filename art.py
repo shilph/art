@@ -8,8 +8,10 @@ from playwright.sync_api import sync_playwright
 import webbrowser
 import platform
 from datetime import date
+from os.path import exists
 
 from art_db import ARTDatabase
+from art_db_sqlite import ARTDatebaseSQLite3
 from popups.add_award import AddAward
 from popups.note_of_day import NoteOfDay
 from popups.settings import Settings
@@ -23,8 +25,29 @@ class ART(object):
         retry = 0
         while True:
             try:
-                password = self.get_mysql_password(retry)
-                self.art_db = ARTDatabase(password=password)
+                # first time user
+                if not exists(ARTDatebaseSQLite3.DEFAULT_DATABASE):
+                    password = self.get_sql_password(
+                        title="Enter New Password",
+                        label="Please enter a strong and complex password to secure your information:"
+                    )
+                    password_repeat = self.get_sql_password(
+                        title="Enter Password again",
+                        label="Please enter the password you entered again:"
+                    )
+                    if password != password_repeat:
+                        messagebox.showerror(
+                            title="Password Not Match",
+                            message="Password you entered is not match.\nPlease try again."
+                        )
+                        raise RuntimeError()
+                else:
+                    if retry == 0:
+                        label = "Please enter database password:"
+                    else:
+                        label = f"Invalid Password.\nPlease enter database password again (Retry {retry}):"
+                    password = self.get_sql_password(title="Enter Password", label=label)
+                self.art_db = ARTDatebaseSQLite3(password=password)
                 self.chrome_debug_port = randint(10000, 30000)
                 # set size of Chrome to a limited/fixed size
                 if platform.system() == "Windows":
@@ -66,6 +89,16 @@ class ART(object):
                         message="Failed to match the password 3 times.\nTerminate the application."
                     )
                     break
+
+    def get_sql_password(self, title: str, label: str) -> str:
+        """Get SQL database password from user.
+
+        :param title: title for a popup
+        :param label: prompt words for a popup
+        :return: user entered MySQL password
+        """
+        return simpledialog.askstring(title=title, prompt=label, show="*")
+
 
     def get_mysql_password(self, retry: int = 0) -> str:
         """Get MySQL password from user.
@@ -271,9 +304,10 @@ class ART(object):
             return script.get_balance(browser=self.chrome_debug_browser,
                                       account_info=account_info,
                                       award_info=award_info)
-        except:
+        except AttributeError as ae:
             # if there is any error, return dummy output
-            return {"balance": 0, "expire_date": None}
+            print(ae)
+            return {"balance": -1, "expire_date": None}
 
     def refresh_award_list(self) -> None:
         """Refresh award overview"""
@@ -338,10 +372,18 @@ class ART(object):
                 crawled_award_data = self.get_current_award_data_from_web(
                     user=owner, username=username, award=award
                 )
+                balance = crawled_award_data["balance"]
+                if crawled_award_data["balance"] == -1:
+                    messagebox.showwarning(
+                        title="Unexpected Error",
+                        message=(f"There is an error while retrieving {award} reward balance.\n"
+                                 f"Please try to update the balance again.")
+                    )
+                    balance = 0
                 self.art_db.add_balance(user=owner,
                                         award=award,
                                         username=username,
-                                        balance=crawled_award_data["balance"],
+                                        balance=balance,
                                         expire_date=crawled_award_data["expire_date"])
                 self.refresh_award_list()
             else:
